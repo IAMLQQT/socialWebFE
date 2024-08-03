@@ -25,10 +25,6 @@ function UserProvider({ children }) {
       .catch((err) => {
         console.log(err);
         if (err.response.status === 401) {
-          toast.error("Please login to continue!", {
-            position: toast.POSITION.TOP_CENTER,
-            autoClose: 5000,
-          });
           localStorage.removeItem("token");
           setToken(null);
           navigate("/");
@@ -36,7 +32,7 @@ function UserProvider({ children }) {
         }
         toast.error("Something went wrong! Please try again!", {
           position: toast.POSITION.TOP_CENTER,
-          autoClose: 5000,
+          autoClose: 2000,
         });
       })
      

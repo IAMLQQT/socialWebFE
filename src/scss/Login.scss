@@ -13,6 +13,7 @@
     h1 {
       text-align: center;
       margin-top: 1rem;
+      max-width: 60%;
     }
     .logo-school {
       width: 10rem;
@@ -20,7 +21,7 @@
   }
   .form2 {
     width: 900px;
-    background-color: #143980;
+    background-color: rgba($color: #8B0305, $alpha: 0.8);
     form {
       width: 340px;
       .login-container {

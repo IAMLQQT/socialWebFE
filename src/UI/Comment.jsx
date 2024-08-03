@@ -56,15 +56,14 @@ function Comment({
     setIsEditing(true);
   };
   const handleDeleteComment = () => {
-    const newComments = postDetail.Comments.filter(
+    const newComments = postDetail.comments.filter(
       (cmt) => cmt.comment_id != comment.comment_id
     );
-    setPostDetail({ ...postDetail, Comments: newComments });
+    setPostDetail({ ...postDetail, comments: newComments });
     axios
       .delete(`${SERVER_DOMAIN}/deleteComment`, {
         data: {
           comment_id: comment.comment_id,
-          created_at: moment().unix(),
         },
         headers: {
           Authorization: `Bearer ${token}`,

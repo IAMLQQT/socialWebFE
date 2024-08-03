@@ -8,6 +8,7 @@ import { useUser } from "../UserProvider";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Blocks, TailSpin } from "react-loader-spinner";
 import moment from "moment";
+import { Navigate, useNavigate } from "react-router-dom";
 
 function Message() {
   const [socket, setSocket] = useState(null);
@@ -20,13 +21,36 @@ function Message() {
   const [messageInput, setMessageInput] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
-
   const { token } = useAuth();
   const { user } = useUser();
   const bottomRef = useRef();
   const prevLength = useRef(0);
   const page = useRef(1);
   const SERVER_DOMAIN = import.meta.env.VITE_SERVER_DOMAIN;
+  const navigate = useNavigate();
+  const iconMap = {
+    ":v": "😀",
+    ":thumbsup:": "👍",
+    ":heart:": "❤️",
+    ":V": "😇",
+    ":)": "😊",
+    ":P": "😜",
+    ":D": "😃",
+    ":(": "😞",
+    ":O": "😮",
+    ":|": "😐",
+    ":*": "😘",
+    ":$": "🤑",
+    ":X": "🤐",
+    ":/": "😕",
+    ";)": "😉",
+    ":@": "😡",
+    ":S": "😨",
+    ":&": "🤔",
+    ":#": "🤫",
+    ":*(": "😥",
+    // Add more mappings as needed
+  };
 
   function formatTimestamp(timestamp) {
     const currentDate = new Date();
@@ -60,9 +84,21 @@ function Message() {
       selectedReceiverId
     ) {
       const timestamp = Date.now();
+      let updatedMessage = messageInput.trim();
+      // Iterate over the icon map and replace text inputs with icons
+      Object.entries(iconMap).forEach(([text, icon]) => {
+        // Escape special characters in the text
+        const escapedText = text.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+        updatedMessage = updatedMessage.replace(
+          new RegExp(`(^|\\s)${escapedText}(?=\\s|$)`, "g"),
+          `$1${icon}`
+        );
+      });
+      // Do something with the updated message (e.g., send it to the server)
+      console.log(updatedMessage);
       socket.emit("newMessage", {
         token,
-        message: messageInput,
+        message: updatedMessage,
         recipient_id: selectedReceiverId,
         timestamp: timestamp,
       });
@@ -70,7 +106,7 @@ function Message() {
       setChatMessages([
         ...chatMessages,
         {
-          message: messageInput,
+          message: updatedMessage,
           user_id: user.user.user_id,
           timestamp: timestamp,
         },
@@ -81,7 +117,14 @@ function Message() {
 
   useEffect(() => {
     // Create the WebSocket connection
-    const newSocket = io("http://localhost:3000", {
+
+    if (!token) {
+      navigate("/");
+      return;
+    }
+    prevLength.current = 0;
+    page.current = 1;
+    const newSocket = io(SERVER_DOMAIN, {
       transports: ["websocket"],
       query: {
         token: token,
@@ -124,7 +167,7 @@ function Message() {
     });
 
     setSocket(newSocket);
-  }, []);
+  }, [selectedRoom]);
   useEffect(() => {
     if (connected && socket) {
       socket.emit("getUserIdsMessaged");
@@ -136,7 +179,7 @@ function Message() {
       token,
       roomId: selectedRoom,
       page: 1,
-      limit: 15,
+      limit: 12,
     });
 
     const chatMessagesResponseHandler = (data) => {
@@ -148,7 +191,7 @@ function Message() {
       }
       const allMess = Object.values(allMessages);
 
-      console.log("length", allMess.length, prevLength.current);
+      console.log("length123", allMess.length, prevLength.current);
       if (allMess.length == prevLength.current) {
         setHasMore(false);
         setChatMessages(allMess);
@@ -164,8 +207,8 @@ function Message() {
 
   useEffect(() => {
     if (!socket) return;
-    
-    prevLength.current = chatMessages.length;
+
+    // prevLength.current = chatMessages.length;
     console.log("length pre", prevLength.current);
     const handleReceiveMessage = (data) => {
       const newMessage = data.newMessage;
@@ -230,7 +273,7 @@ function Message() {
       <div className="chat-ctn">
         <div className="chat-list">
           <h2>Chat list</h2>
-          {recipientInfo.map((chat) => (
+          {recipientInfo?.map((chat) => (
             <div
               className={`message-info ${
                 chat.user_id === selectedReceiverId && "selected"
@@ -248,6 +291,9 @@ function Message() {
                 src={chat.profile_picture}
                 alt="User Avatar"
                 crossOrigin="anonymous"
+                onError={(e) => {
+                  e.target.src = "/public/user.png";
+                }}
               />
               <div className="info">
                 <h4>

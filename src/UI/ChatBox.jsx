@@ -7,6 +7,7 @@ import { TailSpin } from "react-loader-spinner";
 import { io } from "socket.io-client";
 import { useAuth } from "../AuthProvider";
 import { useUser } from "../UserProvider";
+import { useNavigate } from "react-router-dom";
 function ChatBox({ recipient_id, chatBoxes, setChatBoxes, index }) {
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
@@ -18,11 +19,13 @@ function ChatBox({ recipient_id, chatBoxes, setChatBoxes, index }) {
   const [hasMore, setHasMore] = useState(true);
   const [isMinimized, setIsMinimized] = useState(false);
   const { token } = useAuth();
+  console.log(token);
   const { user } = useUser();
   const bottomRef = useRef();
   const prevLength = useRef(0);
   const page = useRef(1);
   const SERVER_DOMAIN = import.meta.env.VITE_SERVER_DOMAIN;
+  const navigate = useNavigate();
   const fetchData = () => {
     page.current = ++page.current;
     console.log("page", page.current);
@@ -56,7 +59,7 @@ function ChatBox({ recipient_id, chatBoxes, setChatBoxes, index }) {
   };
   useEffect(() => {
     // Create the WebSocket connection
-    const newSocket = io("http://localhost:3000", {
+    const newSocket = io(SERVER_DOMAIN, {
       transports: ["websocket"],
       query: {
         token: token,
@@ -87,6 +90,7 @@ function ChatBox({ recipient_id, chatBoxes, setChatBoxes, index }) {
           },
         })
         .then((res) => {
+          console.log(res.data.data);
           setRecipientInfo(...res.data.data);
         })
         .catch((err) => {
@@ -168,6 +172,7 @@ function ChatBox({ recipient_id, chatBoxes, setChatBoxes, index }) {
     return () => socket.off("incoming-message", handleReceiveMessage);
   }, [chatMessages]);
   useEffect(() => {
+    console.log(socket, connected, recipientInfo?.user_id );
     if (socket && connected && recipientInfo?.user_id) {
       setIsLoading(false);
     }
@@ -201,11 +206,17 @@ function ChatBox({ recipient_id, chatBoxes, setChatBoxes, index }) {
       {!isLoading && (
         <>
           <div className="chatbox-header">
-            <div className="user-info">
+            <div
+              className="user-info"
+              onClick={() => navigate("/home/profile/" + recipientInfo.user_id)}
+            >
               <img
                 crossOrigin="anonymous"
                 src={recipientInfo.profile_picture}
                 alt="use-ava"
+                onError={(e) => {
+                  e.target.src = "/public/user.png";
+                }}
               />
               <p>
                 {recipientInfo.first_name} {recipientInfo.last_name}

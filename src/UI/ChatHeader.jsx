@@ -2,21 +2,17 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../AuthProvider";
 import { useUser } from "../UserProvider";
-import axios from "axios";
 import ContentLoader from "react-content-loader";
 import "../scss/ChatHeader.scss";
 function ChatHeader() {
   const [isDropdown, setIsDropdown] = useState(false);
-  const [search, setSearch] = useState("");
-  const [searchResult, setSearchResult] = useState([]);
+
   const [isResultModalOpen, setIsResultModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { token } = useAuth();
+
   const { user, handleGetProfile } = useUser();
   const userProfile = user.user;
-  const SERVER_DOMAIN = import.meta.env.VITE_SERVER_DOMAIN;
   const { handleLogout } = useAuth();
   const modalRef = useRef();
   const searchRef = useRef();
@@ -47,32 +43,6 @@ function ChatHeader() {
   useEffect(() => {
     if (user.length == 0) handleGetProfile();
   }, []);
-  useEffect(() => {
-    if (search.length < 3) return;
-    const debounceTimer = setTimeout(() => {
-      setIsResultModalOpen(true);
-      setIsLoading(true);
-      axios
-        .get(SERVER_DOMAIN + "/search?keyword=" + search, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          if (res.data.data.length === 0) {
-            setSearchResult(null);
-          } else setSearchResult(res.data.data);
-
-          setIsLoading(false);
-          console.log(res.data.data);
-        })
-        .catch((err) => {
-          console.log(err);
-          setIsLoading(false);
-        });
-    }, 500);
-    return () => clearTimeout(debounceTimer);
-  }, [search]);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -100,46 +70,6 @@ function ChatHeader() {
     <div className="chat-header">
       <div className="search-ctn">
         <img src="/logo.png" alt="logo" onClick={() => navigate("/home")} />
-        <div className="search-bar">
-          <input
-            id="searchbar"
-            className="search-input"
-            type="text"
-            placeholder="Search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            ref={searchRef}
-            onFocus={() => setIsResultModalOpen(true)}
-          />
-
-          {isResultModalOpen && isLoading ? (
-            <ul className="search-result" ref={resultRef}>
-              <li>Searching...</li>
-            </ul>
-          ) : (
-            <>
-              {isResultModalOpen &&
-              searchResult == null &&
-              search.length !== "" ? (
-                <ul className="search-result" ref={resultRef}>
-                  <li className="">No result</li>
-                </ul>
-              ) : (
-                isResultModalOpen &&
-                search !== "" &&
-                searchResult != null && (
-                  <ul className="search-result" ref={resultRef}>
-                    {searchResult.map((post) => (
-                      <li className="search-item" key={post.post_id}>
-                        {post.title}
-                      </li>
-                    ))}
-                  </ul>
-                )
-              )}
-            </>
-          )}
-        </div>
       </div>
       <div className="user-info flex a-center" ref={modalRef}>
         {user ? (
@@ -154,6 +84,9 @@ function ChatHeader() {
                 }
                 alt="user-ava"
                 className="ava"
+                onError={(e) => {
+                  e.target.src = "/public/user.png";
+                }}
               />
               <img src="/up-arrow.png" alt="dropdown" className="icon" />
             </div>

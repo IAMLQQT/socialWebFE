@@ -13,14 +13,14 @@ function ResetPassword() {
     if (!password || !confirmPassword || password.length < 6) {
       toast.error("Please enter a valid password!", {
         position: toast.POSITION.TOP_CENTER,
-        autoClose: 5000,
+        autoClose: 3000,
       });
       return;
     }
     if (password !== confirmPassword) {
       toast.error("Passwords don't match!", {
         position: toast.POSITION.TOP_CENTER,
-        autoClose: 5000,
+        autoClose: 3000,
       });
       return;
     }
@@ -32,7 +32,7 @@ function ResetPassword() {
         // Handle the response from the server
         toast.success("Password changed successfully!", {
           position: toast.POSITION.TOP_CENTER,
-          autoClose: 10000,
+          autoClose: 5000,
         });
         navigate("/");
       })
@@ -41,14 +41,14 @@ function ResetPassword() {
         if (error.response.status === 401) {
           toast.error("Your token is invalid!\n ", {
             position: toast.POSITION.TOP_CENTER,
-            autoClose: 5000,
+            autoClose: 3000,
           });
           navigate("/forgetpassword");
           return;
         }
         toast.error("Something went wrong!\n" + error.response.data.message, {
           position: toast.POSITION.TOP_CENTER,
-          autoClose: 5000,
+          autoClose: 3000,
         });
       })
       .finally(() => {
@@ -62,7 +62,7 @@ function ResetPassword() {
         <div className="ResetPassword_main">
           <div className="ResetPassword_logo flex a-center">
             <img src="/logo.png" alt="logo" />
-            <h1>DHKH Student Infomation Exchange</h1>
+            <h1>PTIT Student Infomation Exchange</h1>
           </div>
           <form action="">
             <span>Reset Password</span>

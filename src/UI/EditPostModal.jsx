@@ -42,7 +42,6 @@ export default function EditPostModal({ postdetail, modalIsOpen, setIsOpen, user
       e.returnValue = confirmationMessage;
       return confirmationMessage;
     };
-    console.log("day là postdetail :" + postdetail);
     // Add the event listener when the component mounts
     if (title || content || code) {
       if (!beforeUnloadListenerAdded) {
@@ -158,7 +157,7 @@ export default function EditPostModal({ postdetail, modalIsOpen, setIsOpen, user
       });
   }
   return (
-    <div className="create-post-modal">
+    <div className="create-post-modal" >
       <Modal
         isOpen={modalIsOpen}
         onAfterOpen={afterOpenModal}

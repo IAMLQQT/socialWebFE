@@ -15,6 +15,8 @@ import { AuthProvider } from "./AuthProvider";
 import ChangePassword from "./pages/ChangePassword";
 import { UserProvider } from "./UserProvider";
 import SavedPost from "./pages/SavedPost";
+import Users from "./pages/Users";
+import SearchResult from "./pages/SearchResult"
 function App() {
   return (
     <BrowserRouter>
@@ -22,10 +24,12 @@ function App() {
         <UserProvider>
           <Routes>
             <Route path="/home" element={<HomePage />}>
-              <Route path="profile/:userId" element={<Profile />} />
+              <Route path="profile/:userId?" element={<Profile />} />
               <Route path="profiledetail" element={<ProfileDetail />} />
               <Route path="post/:postId" element={<PostDetail />} />
-              <Route path="savedpost" element={<SavedPost />}/> 
+              <Route path="savedposts" element={<SavedPost />}/> 
+              <Route path="users" element={<Users />}/>
+               <Route path="search" element={<SearchResult />} />
             </Route>
             <Route path="/" element={<Login />} />
             <Route path="/messages" element={<Message />} />

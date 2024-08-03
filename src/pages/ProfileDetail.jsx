@@ -117,7 +117,7 @@ export default function ProfileDetail() {
           <input
             className="email-user"
             type="email"
-            defaultValue={profile.email}
+            defaultValue={profile.account.email}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

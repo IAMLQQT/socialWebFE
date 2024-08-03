@@ -6,15 +6,15 @@ import { v4 as uuidv4 } from "uuid";
 
 function Contacts({ contacts, chatBoxes, setChatBoxes }) {
   if (!contacts) return <Code />;
-  console.log(contacts);
+  console.log(contacts.map(contact => contact.user_id));
   return (
     <div className="">
       <h3>Contact</h3>
       <div className="user-contact">
-        {contacts?.map((contact) => (
+        {contacts?.map((contact, index) => (
           <ContactItem
-            contact={contact?.following}
-            key={contact?.following_id}
+            contact={contact?.includedUser}
+            key={contact?.user_id}
             chatBoxes={chatBoxes}
             setChatBoxes={setChatBoxes}
           />
@@ -26,6 +26,7 @@ function Contacts({ contacts, chatBoxes, setChatBoxes }) {
 
 // eslint-disable-next-line react/prop-types
 function ContactItem({ contact, key, chatBoxes, setChatBoxes }) {
+  console.log(key);
   const handleClickContact = () => {
     const isExisted = chatBoxes.some(cb => cb.recipient_id === contact.user_id);
     if (isExisted) return;

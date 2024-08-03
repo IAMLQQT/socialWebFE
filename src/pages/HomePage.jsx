@@ -82,7 +82,7 @@ export default function HomePage() {
                 />
                 {!isLoading ? (
                   <InfiniteScroll
-                    dataLength={posts.length}
+                    dataLength={posts?.length}
                     next={fetchPosts}
                     hasMore={hasMore}
                     loader={<Code className="post" />}

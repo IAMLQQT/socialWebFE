@@ -92,12 +92,12 @@ function Login() {
         <div className="form flex j-center j-center">
           <div className="logo flex a-center j-center">
             <img className="logo-school" src="public\logo.png" alt="Logo" />
-            <h1>DHKH Student Infomation Exchange</h1>
+            <h1>PTIT Student Infomation Exchange</h1>
           </div>
           <div className="form2 flex a-center j-center">
             <form onSubmit={handleSubmit}>
-              <h2>DHKH SOCIAL MEDIA</h2>
-              <p>Welcom to DHT University</p>
+              <h2>PTIT SOCIAL MEDIA</h2>
+              <p>Welcom to Posts & Telecoms Institute of Technology Social Web</p>
               <nav>
                 <button
                   type="button"

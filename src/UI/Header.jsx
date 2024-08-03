@@ -8,29 +8,24 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../AuthProvider";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import moment from "moment";
+import NotificationModel from "../UI/NotificationModel";
 Header.propTypes = {
   user: PropTypes.shape({
     first_name: PropTypes.string.isRequired,
     last_name: PropTypes.string.isRequired,
     profile_picture: PropTypes.string.isRequired,
-    email: PropTypes.string.isRequired,
   }),
 };
-
-function Header({ user }) {
+function Header({ user, tabSelected, setTabSelected }) {
   const [isDropdown, setIsDropdown] = useState(false);
   const [search, setSearch] = useState("");
-  const [searchResult, setSearchResult] = useState([]);
-  const [isResultModalOpen, setIsResultModalOpen] = useState(false);
-  const [hasResult, setHasResult] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   const navigate = useNavigate();
-  const { token } = useAuth();
-  const SERVER_DOMAIN = import.meta.env.VITE_SERVER_DOMAIN;
   const { handleLogout } = useAuth();
   const modalRef = useRef();
   const searchRef = useRef();
-  const resultRef = useRef();
+  const advancedSearchRef = useRef();
   const handleButtonClick = (buttonType) => {
     switch (buttonType) {
       case "profile":
@@ -54,82 +49,55 @@ function Header({ user }) {
     setIsDropdown(!isDropdown);
   };
 
-  const handleKeyPress = (e) => {
-    if (search === "") setSearchResult([]);
-    if (e.key === "Enter" && search) {
-      setIsLoading(true);
-      axios
-        .get(SERVER_DOMAIN + "/search?keyword=" + search, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          setSearchResult(res.data.data);
-          setIsLoading(false);
-          setIsResultModalOpen(true);
-          console.log(res.data.data);
-        })
-        .catch((err) => {
-          console.log(err);
-          setIsLoading(false);
-        });
+  const handelSearch = (e) => {
+    if (e.key === "Enter" && search.trim() !== "") {
+      navigate("/home/search?q=" + encodeURIComponent(search));
     }
   };
-  useEffect(() => {
-    if (search.length < 3) return;
-    const debounceTimer = setTimeout(() => {
-      setIsResultModalOpen(true);
-      setIsLoading(true);
-      axios
-        .get(SERVER_DOMAIN + "/search?keyword=" + search, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        .then((res) => {
-          if (res.data.data.length === 0) {
-            setSearchResult(null);
-          } else setSearchResult(res.data.data);
-
-          setIsLoading(false);
-          console.log(res.data.data);
-        })
-        .catch((err) => {
-          console.log(err);
-          setIsLoading(false);
-        });
-    }, 500);
-    return () => clearTimeout(debounceTimer);
-  }, [search]);
   useEffect(() => {
     const handleOutsideClick = (event) => {
       if (
         modalRef.current &&
         !modalRef.current.contains(event.target) &&
-        !searchRef.current.contains(event.target)
+        !searchRef.current.contains(event.target) &&
+        isAdvancedSearchOpen
       ) {
-        console.log(modalRef.current.contains(event.target), resultRef);
+        console.log(modalRef.current);
 
         setIsDropdown(false);
-        setIsResultModalOpen(false);
+        setIsAdvancedSearchOpen(false);
       }
     };
 
-    if (isDropdown || isResultModalOpen) {
+    if (isDropdown || isAdvancedSearchOpen) {
       document.addEventListener("mousedown", handleOutsideClick);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
-  }, [isDropdown, isResultModalOpen]);
+  }, [isDropdown, isAdvancedSearchOpen]);
   return (
     <div className="header flex a-center j-between">
       <div className="nav-header flex a-center j-center">
-        <p className="active">Explore</p>
-        <p>Community post</p>
-        <p>Pages</p>
+        <p
+          className={`${tabSelected === "explore" && "active"}`}
+          onClick={() => {
+            setTabSelected("explore");
+            navigate("/home");
+          }}
+        >
+          Explore
+        </p>
+        <p
+          className={`${tabSelected === "community" && "active"} `}
+          onClick={() => {
+            setTabSelected("community");
+            navigate("/home");
+          }}
+        >
+          My Community
+        </p>
       </div>
 
       <div className="info-ctn flex a-center">
@@ -141,40 +109,42 @@ function Header({ user }) {
             placeholder="Search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={handleKeyPress}
             ref={searchRef}
-            onFocus={() => setIsResultModalOpen(true)}
+            onKeyDown={handelSearch}
+            onFocus={() => {
+              setIsAdvancedSearchOpen(true);
+              setIsDropdown(false);
+            }}
           />
-
-          {isResultModalOpen && isLoading ? (
-            <ul className="search-result" ref={resultRef}>
-              <li>Searching...</li>
-            </ul>
-          ) : (
-            <>
-              {isResultModalOpen &&
-              searchResult == null &&
-              search.length !== "" ? (
-                <ul className="search-result" ref={resultRef}>
-                  <li className="">No result</li>
-                </ul>
-              ) : (
-                isResultModalOpen &&
-                search !== "" &&
-                searchResult != null && (
-                  <ul className="search-result" ref={resultRef}>
-                    {searchResult.map((post) => (
-                      <li className="search-item" key={post.post_id}>
-                        {post.title}
-                      </li>
-                    ))}
-                  </ul>
-                )
-              )}
-            </>
+          {isAdvancedSearchOpen && (
+            <div className="advanced-search-form" ref={advancedSearchRef}>
+              <div className="col left-col">
+                <div>
+                  <p>
+                    <span>@tag:nodejs</span> search within a tag
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    <span>@user:&quot;quốc huy&quot;</span> search by
+                    author&apos;s name
+                  </p>
+                </div>
+              </div>
+              <div className="col right-col">
+                <div>
+                  <p>
+                    <span>@date:&quot;16/04/2020&quot;</span> post after this
+                    date
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
         </div>
-
+        <div className="user-notification">
+          <NotificationModel />
+        </div>
         <div className="user-info flex a-center" ref={modalRef}>
           {user ? (
             <>
@@ -186,14 +156,24 @@ function Header({ user }) {
                   }
                   alt="user-ava"
                   className="ava"
+                  onError={(e) => {
+                    e.target.src = "/public/user.png";
+                  }}
                 />
-                <img src="/up-arrow.png" alt="dropdown" className="icon" />
+                <img
+                  src="/up-arrow.png"
+                  alt="dropdown"
+                  className="icon"
+                  onError={(e) => {
+                    e.target.src = "/public/user.png";
+                  }}
+                />
               </div>
               {isDropdown ? (
                 <ul className="menu">
                   <li className="menu-item">
                     <button
-                      className="flex a-center"
+                      className=""
                       onClick={() => handleButtonClick("profile")}
                     >
                       <img
@@ -203,14 +183,16 @@ function Header({ user }) {
                             ? user?.profile_picture
                             : "/public/user.png"
                         }
+                        onError={(e) => {
+                          e.target.src = "/public/user.png";
+                        }}
                         alt="user-ava"
                         className="ava"
                       />
                       <div className="flex">
                         <div className="user-name">
-                          <p>{`${user?.first_name || ""} ${
-                            user?.last_name || ""
-                          }`}</p>
+                          <p>{`${user?.first_name || ""} ${user?.last_name || ""
+                            }`}</p>
                           <p>{user?.email || ""}</p>
                         </div>
                       </div>

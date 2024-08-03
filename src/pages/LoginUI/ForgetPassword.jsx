@@ -57,7 +57,7 @@ function ForgetPasswords() {
         <div className="ForgetPassword_main">
           <div className="ForgetPassword_logo flex a-center">
             <img src="logo.png" alt="" />
-            <h1>DHKH Student Infomation Exchange</h1>
+            <h1>PTIT Student Infomation Exchange</h1>
           </div>
           <form action="">
             <span>

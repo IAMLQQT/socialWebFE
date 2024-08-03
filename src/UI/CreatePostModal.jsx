@@ -32,7 +32,7 @@ function CreatePostModal({ modalIsOpen, setIsOpen, user }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [code, setCode] = useState("");
-  const [tags, setTags] = useState([]);
+  const [Tags, setTags] = useState([]);
 
   const [beforeUnloadListenerAdded, setBeforeUnloadListenerAdded] =
     useState(false);
@@ -124,7 +124,7 @@ function CreatePostModal({ modalIsOpen, setIsOpen, user }) {
           title,
           content,
           code,
-          tags: tags.split(",").length > 1 ? tags : null,
+          Tags,
           created_at: moment().unix(),
         },
         {
@@ -230,7 +230,7 @@ function CreatePostModal({ modalIsOpen, setIsOpen, user }) {
           </p>
 
           <textarea
-            value={tags}
+            value={Tags}
             onChange={(e) => setTags(e.target.value)}
             name="code"
             placeholder="Seprate tags with a comma. eg : python,java,reactjs. If you don't, it won't show up on your post!"

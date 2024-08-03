@@ -11,26 +11,38 @@ import Post from "./Post";
 import { useAuth } from "../AuthProvider";
 import CreatePostModal from "../ui/CreatePostModal";
 import { toast } from "react-toastify";
-
+import moment from "moment";
 export default function Profile() {
   const { user, handleGetProfile } = useUser();
   const { token, setToken } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [posts, setPosts] = useState([]);
-  const [hasMore, setHasMore] = useState(true); // [true, function
+  const [hasMore, setHasMore] = useState(true);
+  const [refresher, setRefresher] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const page = useRef(1);
   const [userProfile, setUserProfile] = useState(null);
   const SERVER_DOMAIN = import.meta.env.VITE_SERVER_DOMAIN;
   const [modalIsOpen, setIsOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const { userId } = useParams();
+  const handleButtonClick = () => {
+    setShowDropdown(!showDropdown);
+  };
+  const handleUnfriendClick = () => {
+    setShowModal(true);
+};
+const handleCancelUnfriend = () => {
+  setShowModal(false);
+};
   const navigate = useNavigate();
-  console.log("user", userProfile);
-  const handleFollow = () => {
+  const handleAddFriend = () => {
     axios
       .post(
-        SERVER_DOMAIN + "/user/follow",
+        SERVER_DOMAIN + "/user/addfriendrequest",
         {
-          following_id: userId,
+          user_receive_id: userId,
+          created_at: moment().unix(),
         },
         {
           headers: {
@@ -41,8 +53,7 @@ export default function Profile() {
       .then(() => {
         setUserProfile({
           ...userProfile,
-          isFollowing: true,
-          followers: userProfile.followers + 1,
+          isRequestFriend: true,
         });
         handleGetProfile();
       })
@@ -54,38 +65,35 @@ export default function Profile() {
         });
       });
   };
-  const handleUnfollow = () => {
+  const handleConfirmUnfriend = () => {
     axios
-      .post(
-        SERVER_DOMAIN + "/user/unfollow",
-        {
-          following_id: userId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      .then(() => {
-        setUserProfile({
-          ...userProfile,
-          isFollowing: false,
-          followers: userProfile.followers - 1,
+        .post(
+            SERVER_DOMAIN + "/user/unfriend",
+            {
+                user_friend_id: userProfile.user_id,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        )
+        .then((res) => {
+            console.log("Unfriended successfully:", res.data);
+            setShowModal(false);
+            setShowDropdown(false);
+            setRefresher(!refresher)
+        })
+        .catch((err) => {
+            console.error("Error unfriending:", err);
         });
-        handleGetProfile();
-      })
-      .catch((err) => {
-        console.log(err);
-        toast.error("Something went wrong! Please try again!", {
-          position: toast.POSITION.TOP_CENTER,
-          autoClose: 5000,
-        });
-      });
-  };
+};
   useEffect(() => {
+    const apiEndpoint = userId
+      ? `${SERVER_DOMAIN}/user/getUserSearchProfile/${userId}`
+      : `${SERVER_DOMAIN}/user/getProfile/`;
     axios
-      .get(SERVER_DOMAIN + "/user/getProfile/" + userId, {
+      .get(apiEndpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -111,7 +119,7 @@ export default function Profile() {
           autoClose: 5000,
         });
       });
-  }, []);
+  }, [userId, refresher]);
   useEffect(() => {
     axios
       .get(SERVER_DOMAIN + `/getPosts?page=1&limit=5&userId=${userId}`, {
@@ -123,14 +131,15 @@ export default function Profile() {
         console.log("data", res.data.data);
         setIsLoading(false);
         setPosts(res.data.data);
+
       });
-  }, [userProfile]);
+  }, [userProfile, refresher]);
   const fetchPosts = () => {
     page.current += 1;
     axios
       .get(
         SERVER_DOMAIN +
-          `/getPosts?page=${page.current}&limit=5&userId=${userId}`,
+        `/getPosts?page=${page.current}&limit=5&userId=${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -167,26 +176,48 @@ export default function Profile() {
             <div className="profile-name flex a-center">
               <h3 className="first-name">{userProfile.first_name}</h3>
               <h3 className="last-name">{userProfile.last_name}</h3>
-              <p>{userProfile.nick_name ? `(${userProfile.nick_name})` : ""}</p>
+             
             </div>
-            <h5 className="followers">{userProfile.followers} followers</h5>
+            <h5 className="followers">{userProfile.friendships} Friends</h5>
           </div>
         </div>
         <div className="follow-button">
-          {userProfile.user_id !== user?.user?.user_id &&
-            (userProfile.isFollowing ? (
-              <button
-                className="following flex a-center"
-                onClick={handleUnfollow}
-              >
-                Following
+          {userProfile.user_id !== user?.user?.user_id && (
+            userProfile.isFriendShip ? (
+              <div className="friend-button-container" style={{ position: 'relative' }}>
+                <button className="friends flex a-center" onClick={handleButtonClick}>
+                  Friends
+                  <img src="/check.png" alt="Friends" />
+                </button>
+                {showDropdown && (
+                  <div className="dropdown-menu" style={{ position: 'absolute', top: '110%', right : '0', background: '#fff', zIndex: 1000 }}>
+                   <button className="unfriend-button" onClick={handleUnfriendClick}>
+                      Unfriend
+                    </button>
+                  </div>
+                )}
+                {showModal && (
+                <>
+                    <div className="modal-backdrop" />
+                    <div className="modal">
+                        <p>Are you sure you want to unfriend {userProfile.first_name} {userProfile.last_name}?</p>
+                        <button onClick={handleConfirmUnfriend}>Yes</button>
+                        <button onClick={handleCancelUnfriend}>No</button>
+                    </div>
+                </>
+            )}
+              </div>
+            ) : userProfile.isRequestFriend ? (
+              <button className="following flex a-center">
+                Sent request
                 <img src="/check.png" alt="" />
               </button>
             ) : (
-              <button className="follow" onClick={handleFollow}>
-                Follow
+              <button className="follow" onClick={handleAddFriend}>
+                Add Friend
               </button>
-            ))}
+            )
+          )}
         </div>
       </div>
       <div className="profile-section flex j-between">
@@ -194,11 +225,7 @@ export default function Profile() {
           <h3>Portfolio</h3>
           <div className="wrapper">
             <i className="fa-solid fa-envelope"></i>
-            <span>{userProfile.email}</span>
-          </div>
-          <div className="wrapper">
-            <i className="fa-solid fa-cake-candles"></i>
-            <span>08/11/2002</span>
+            <span>{userProfile.account.email}</span>
           </div>
           <div className="wrapper">
             <i className="fa-solid fa-comment"></i>
@@ -229,27 +256,34 @@ export default function Profile() {
           )}
 
           {!isLoading ? (
-            <InfiniteScroll
-              dataLength={posts.length}
-              next={fetchPosts}
-              hasMore={hasMore}
-              loader={<Code className="post" />}
-              endMessage={
-                <p style={{ textAlign: "center", marginTop: "2rem" }}>
-                  <b>Yay! You have seen it all</b>
-                </p>
-              }
-            >
-              {posts?.map((post) => (
-                <Post post={post} key={post.post_id} />
-              ))}
-            </InfiniteScroll>
+            posts.length === 0 ? (
+              <p style={{ textAlign: "center", marginTop: "2rem" }}>
+                <b>No posts available</b>
+              </p>
+            ) : (
+              <InfiniteScroll
+                dataLength={posts.length}
+                next={fetchPosts}
+                hasMore={hasMore}
+                loader={<Code className="post" />}
+                endMessage={
+                  <p style={{ textAlign: "center", marginTop: "2rem" }}>
+                    <b>Yay! You have seen it all</b>
+                  </p>
+                }
+              >
+                {posts.map((post) => (
+                  <Post post={post} key={post.post_id} />
+                ))}
+              </InfiniteScroll>
+            )
           ) : (
             <>
               <Code className="post" />
               <Code className="post" />
             </>
           )}
+
         </div>
       </div>
     </div>

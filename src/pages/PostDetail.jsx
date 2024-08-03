@@ -11,7 +11,6 @@ import { useUser } from "../UserProvider.jsx";
 import Comment from "../ui/Comment.jsx";
 import EditPostModal from "../UI/EditPostModal.jsx";
 export default function PostDetail() {
-
   const modalRef = useRef();
   const [refresher, setRefresher] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,7 +49,7 @@ export default function PostDetail() {
             },
           }
         )
-        .then(() => {})
+        .then(() => { })
         .catch((err) => {
           console.log(err);
           toast.error("Something went wrong! Please try again!", {
@@ -75,7 +74,7 @@ export default function PostDetail() {
             Authorization: `Bearer ${token}`,
           },
         })
-        .then(() => {})
+        .then(() => { })
         .catch((err) => {
           console.log(err);
           toast.error("Something went wrong! Please try again!", {
@@ -85,16 +84,16 @@ export default function PostDetail() {
         });
     }
   };
-  
+
   const handleLikeButton = () => {
     console.log(postDetail);
     if (!postDetail.isLiked) {
       setPostDetail({
         ...postDetail,
         isLiked: true,
-        Likes: [
-          ...postDetail.Likes,
-          { user_id: user.user.user_id, post_id: postDetail.post_id },
+        likes: [
+          ...postDetail.likes,
+          { user_id: user.user_id, post_id: postDetail.post_id },
         ],
       });
       axios
@@ -108,8 +107,8 @@ export default function PostDetail() {
               Authorization: `Bearer ${token}`,
             },
           }
-        )
-        .then(() => {})
+        ) 
+        .then(() => {setRefresher(!refresher);})
         .catch((err) => {
           console.log(err);
           toast.error("Something went wrong! Please try again!", {
@@ -118,13 +117,6 @@ export default function PostDetail() {
           });
         });
     } else {
-      setPostDetail({
-        ...postDetail,
-        isLiked: false,
-        Likes: postDetail.Likes.filter(
-          (like) => like.user_id !== user.user.user_id
-        ),
-      });
       axios
         .delete(`${SERVER_DOMAIN}/unlikePost/`, {
           data: {
@@ -134,7 +126,15 @@ export default function PostDetail() {
             Authorization: `Bearer ${token}`,
           },
         })
-        .then(() => {})
+        .then(() => { 
+          setPostDetail({
+            ...postDetail,
+            isLiked: false,
+            likes: postDetail.likes.filter(
+              (like) => like.user_id !== user.user.user_id
+            ),
+          });
+        })
         .catch((err) => {
           console.log(err);
           toast.error("Something went wrong! Please try again!", {
@@ -219,77 +219,74 @@ export default function PostDetail() {
 
     return () => window.removeEventListener("mousedown", handleClickOutside);
   }, [isModalOpen]);
-  
   if (isLoading) {
     return <Code />;
   }
   return (
     <div className="post-detail">
       <div className="post-detail-header flex a-center j-between">
-        <h1>{postDetail.title}</h1>
+        <h1>{postDetail?.title}</h1>
         <div className="post-detail-header-btn">
           <button className="post-save" onClick={handelSavePostButton}>
-          <i
-              className={`${
-                postDetail.isSaved ? "fa-solid" : "fa-regular"
-              } fa-bookmark`}
+            <i
+              className={`${postDetail?.isSaved ? "fa-solid" : "fa-regular"
+                } fa-bookmark`}
             ></i>
           </button>
           <button className="post-like" onClick={handleLikeButton}>
             <i
-              className={`${
-                postDetail.isLiked ? "fa-solid" : "fa-regular"
-              } fa-heart`}
+              className={`${postDetail?.isLiked ? "fa-solid" : "fa-regular"
+                } fa-heart`}
             ></i>
           </button>
           <button type="button" className="post-edit" onClick={() => setIsDropdown(true)}>
             <i className="fa-solid fa-ellipsis"></i>
           </button>
           {isDropdown && (
-          <ul className="modify-dropdown" ref={modalRef}>
-            {user.user.user_id === postDetail?.user?.user_id && (
-              <>
-                <li>
-                  <button type="button" onClick={handleEditButton}>
-                    Edit
-                  </button>
-                  <EditPostModal
-                  modalIsOpen={modalIsOpen}
-                  setIsOpen={setIsOpen}
-                  user={user?.user}
-                  postdetail={postDetail}
-                 />
-                </li>
-                <li>
-                  <button type="button" >
-                    Delete
-                  </button>
-                  
-                </li>
-              </>
+            <ul className="modify-dropdown" ref={modalRef}>
+              {user.user.user_id === postDetail?.user?.user_id && (
+                <>
+                  <li>
+                    <button type="button" onClick={handleEditButton}>
+                      Edit
+                    </button>
+                    <EditPostModal
+                    modalIsOpen={modalIsOpen}
+                    setIsOpen={setIsOpen}
+                    user={user?.user}
+                    postdetail={postDetail}
+                   />
+                  </li>
+                  <li>
+                    <button type="button" >
+                      Delete
+                    </button>
+                    
+                  </li>
+                </>
+              )}
+              {user.user.user_id !== postDetail?.user?.user_id && (
+                <>
+                  <li>
+                    <button type="button">Report</button>
+                  </li>
+                </>
+              )}
+            </ul>
             )}
-            {user.user.user_id !== postDetail?.user?.user_id && (
-              <>
-                <li>
-                  <button type="button">Report</button>
-                </li>
-              </>
-            )}
-          </ul>
-          )}
         </div>
       </div>
       <div className="post-detail-content">
-        <p className="post-content">{postDetail.content}</p>
+        <p className="post-content">{postDetail?.content}</p>
       </div>
-      {postDetail.code && (
+      {postDetail?.code && (
         <div className="post-detail-code">
           <CodeBlock codeString={postDetail?.code} />
         </div>
       )}
 
       <div className="post-detail-hashtag">
-        {postDetail.tags?.split(",").map((tag) => (
+        {postDetail?.tags?.split(",").map((tag) => (
           <span className="hashtag" key={tag}>
             #{tag}
           </span>
@@ -301,28 +298,28 @@ export default function PostDetail() {
             className="number-of-likes"
             onClick={() => setIsModalOpen(true)}
           >
-            <i className="fa-solid fa-heart"></i> {postDetail.Likes.length}{" "}
+            <i className="fa-solid fa-heart"></i> {postDetail?.likes?.length}{" "}
             Likes
           </span>
           <span className="number-of-comment">
             <i className="fa-solid fa-comments"></i>{" "}
-            {postDetail.Comments.length} Comments
+            {postDetail?.comments?.length} Comments
           </span>
         </div>
         <div className="post-info flex a-center">
           <img
             crossOrigin="anonymus"
-            src={postDetail.user?.profile_picture}
+            src={postDetail?.user?.profile_picture}
             alt=""
           />
           <p
             className="post-description"
             onClick={() =>
-              navigate(`/home/profile/${postDetail.user?.user_id}`)
+              navigate(`/home/profile/${postDetail?.user?.user_id}`)
             }
           >
-            {postDetail.user?.first_name} {postDetail.user?.last_name} |{" "}
-            {moment.unix(postDetail.created_at).format("LLL")}
+            {postDetail?.user?.first_name} {postDetail?.user?.last_name} |{" "}
+            {moment.unix(postDetail?.created_at).format("LLL")}
           </p>
         </div>
       </div>
@@ -349,48 +346,50 @@ export default function PostDetail() {
       </div>
 
       <div className="post-detail-comment">
-        {postDetail?.Comments.map((comment) => (
-          <Comment
-            comment={comment}
-            key={comment.comment_id}
-            setRefresher={setRefresher}
-            postDetail={postDetail}
-            setPostDetail={setPostDetail}
-            userId={user?.user?.user_id}
-            token={token}
-          />
-        ))}
-      </div>
-      {isModalOpen && (
-        <ul className="like-list" ref={likeListRef}>
-          <h2>Who likes</h2>
-          <img
-            src="/close.png"
-            alt="/close.png"
-            className="btn-close"
-            onClick={() => setIsModalOpen(false)}
-          />
-
-          {postDetail.Likes?.map((like) => (
-            <li key={like.user_id}>
-              <button
-                type="button"
-                className="flex a-center"
-                onClick={() => navigate(`/home/profile/${like.user_id}`)}
-              >
-                <img
-                  crossOrigin="anonymus"
-                  src={like?.user?.profile_picture}
-                  alt="Profile Picture"
-                />
-                <p>
-                  {like.user?.first_name} {like.user?.last_name}
-                </p>
-              </button>
-            </li>
+          {postDetail?.comments.map((comment) => (
+            <Comment
+              comment={comment}
+              key={comment.comment_id}
+              setRefresher={setRefresher}
+              postDetail={postDetail}
+              setPostDetail={setPostDetail}
+              userId={user?.user?.user_id}
+              token={token}
+            />
           ))}
-        </ul>
-      )}
+        </div>
+        {isModalOpen && (
+          <ul className="like-list" ref={likeListRef}>
+            <h2>Who likes</h2>
+            <img
+              src="/close.png"
+              alt="/close.png"
+              className="btn-close"
+              onClick={() => setIsModalOpen(false)}
+            />
+  
+            {postDetail?.likes?.map((like) => (
+              <li key={like?.user_id}>
+                <button
+                  type="button"
+                  className="flex a-center"
+                  onClick={() => navigate(`/home/profile/${like?.user_id}`)}
+                >
+                  <img
+                    crossOrigin="anonymus"
+                    src={like?.user?.profile_picture}
+                    alt="Profile Picture"
+                  />
+                  <p>
+                    {like.user?.first_name} {like?.user?.last_name}
+                  </p>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
     </div>
   );
+
+
 }
